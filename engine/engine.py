@@ -51,4 +51,4 @@ class EngineWriter(Engine):
         """
         Write a frame into the engine. Call in a tight loop, you need to hit your given framerate!
         """
-        pass
+        self.writer.write(frame)
