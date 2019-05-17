@@ -3,6 +3,10 @@ import shlex
 import subprocess
 from typing import Tuple
 
+DEFAULT_SOCKET_PATH = "/tmp/engineering"
+DEFAULT_EXEC = "/usr/local/bin/potential-engine"
+DEFAULT_VIDEO_SIZE = (640, 480, 30)
+
 
 class Engine:
     """
@@ -11,9 +15,9 @@ class Engine:
 
     def __init__(
         self,
-        socket_path: str = "/tmp/engineering",
-        engine_exec: str = "/usr/local/bin/potential-engine",
-        video_size: Tuple[int, int, int] = (640, 480, 30),
+        socket_path: str = DEFAULT_SOCKET_PATH,
+        engine_exec: str = DEFAULT_EXEC,
+        video_size: Tuple[int, int, int] = DEFAULT_VIDEO_SIZE,
     ):
         launchline = "{exec_} -w {w} -h {h} -f {f} -d {sock} --shared_memory".format(
             exec_=engine_exec,
@@ -32,9 +36,9 @@ class EngineWriter(Engine):
 
     def __init__(
         self,
-        socket_path: str = "/tmp/engineering",
-        engine_exec: str = "/usr/local/bin/potential-engine",
-        video_size: Tuple[int, int, int] = (640, 480, 30),
+        socket_path: str = DEFAULT_SOCKET_PATH,
+        engine_exec: str = DEFAULT_EXEC,
+        video_size: Tuple[int, int, int] = DEFAULT_VIDEO_SIZE,
     ):
         super().__init__(socket_path, engine_exec, video_size)
         # pipeline, 0 (magic gst number), framerate, video dimensions tuple
