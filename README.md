@@ -5,7 +5,7 @@ upgraded-engineer
 `upgraded-engineer` is a Python library for interacting with FRC 3494's [`potential-engine`.](https://github.com/BHSSFRC/potential-engine)
 
 ## Installation
-Coming soon to a `pip` near you!
+`pip install upgraded-engineer`
 ### Dependencies
 * GStreamer (base and bad plugins required for `upgraded-engineer`, more required by `potential-engine`)
 * Open CV (known working with >= 4.0.0, must be compiled with GStreamer support)
