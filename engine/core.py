@@ -38,7 +38,7 @@ class Engine:
 
 class EngineWriter(Engine):
     """
-    Starts and writes data into an engine.
+    Starts an engine and provides easy access to the shared memory socket.
     """
 
     def __init__(
