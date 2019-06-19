@@ -19,6 +19,13 @@ class Engine:
         engine_exec: str = DEFAULT_EXEC,
         video_size: Tuple[int, int, int] = DEFAULT_VIDEO_SIZE,
     ):
+        """
+        Constructor. Starts a new potential-engine process.
+        
+        :param socket_path: Location to create the shared memory socket at.
+        :param engine_exec: Absolute path to the compiled potential-engine binary. 
+        :param video_size: Tuple of video dimensions (width, height, framerate)
+        """
         launchline = "{exec_} -w {w} -h {h} -f {f} -d {sock} --shared_memory".format(
             exec_=engine_exec,
             w=video_size[0],
@@ -54,5 +61,7 @@ class EngineWriter(Engine):
     def write_frame(self, frame):
         """
         Write a frame into the engine. Call in a tight loop, you need to hit your given framerate!
+
+        :param frame: Frame to write to shared memory.
         """
         self.writer.write(frame)
