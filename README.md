@@ -1,6 +1,7 @@
 upgraded-engineer
----
+===
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
+[![PyPI](https://img.shields.io/pypi/v/upgraded-engineer.svg)](https://pypi.org/project/upgraded-engineer/)
 
 `upgraded-engineer` is a Python library for interacting with FRC 3494's [`potential-engine`.](https://github.com/BHSSFRC/potential-engine)
 
