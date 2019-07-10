@@ -5,16 +5,16 @@ install:
     # - pip install -r requirements.txt
     - pip install black
 jobs:
-    include:
-          script: black --check .
-        # script: your_test_script
-        - stage: deploy
-          script: skip
-          deploy:
-            provider: pypi
-            on:
-                tags: true
-            user: "cxberger"
-            password:
-                secure: "kmufUgYb1bTueUysJk/RCChwRFhoaoRWRsvJYnkEOaKcfEjxjSKVbery8aSw4tq1+VH1ChwwnOuiMupRDSwPKGnJLsEmBafgBbyjgW7XOiNUqcyz94LScuiQagcGdcfO9Pgmk2eFDrX5d2CB0cgkZpIPdlOepm2oaVZ9PL73qMqoIHUYMEbC+pOmY5bzf1KkkYTmqNO1qS7VL3QRMqUEDPpA/QFV08DDn3khQVcRtW2EFpnWI672SGV+4Bwj9LzYT9liYIhaTpowwu1Ba1ofThg9PdJeTo5lUo+y4zgks4KMRz9kMWU4JKBFlY7aX6RvVs628/W0qK5RN6eMq2XpOgjqqlrddNtGVla4ReF5G0LmrZkvnTGU+G0F8w8q01tLfalrLDlmUZ2kVo2VIV6qPEOCvnOPJ42Agc+FIyTM745ECFjsiK8waSz2smHDL4fFG0iJqMzKavu0MIvLQuBcXGh1+M30dwU3RPeEPkyCrJoex6S6Rm6nT7FmjSCRSJX0uV8VgXxzt3IEOgc+tqyBHrmAcLttYEsBPEbaiFWdO7JXIkNtbLsb26G9n0GHLzsLi8eMkZ4KbRim5+TJ73zE1z2Icxe7KpSN/wAsezytNYKBYno4FN/LpjwvamMbNBXSPp+/TsldTRu6Y/GbiJrJEzzkQYR2vQ1hnw5hfCdyfas="
-            distributions: "sdist bdist_wheel"
+  include:
+    - script: black --check .
+    # - script: your_test_script
+    - stage: deploy
+      script: skip
+      deploy: &pypi
+        provider: pypi
+        on:
+            tags: true
+        user: "cxberger"
+        password:
+            secure: "kmufUgYb1bTueUysJk/RCChwRFhoaoRWRsvJYnkEOaKcfEjxjSKVbery8aSw4tq1+VH1ChwwnOuiMupRDSwPKGnJLsEmBafgBbyjgW7XOiNUqcyz94LScuiQagcGdcfO9Pgmk2eFDrX5d2CB0cgkZpIPdlOepm2oaVZ9PL73qMqoIHUYMEbC+pOmY5bzf1KkkYTmqNO1qS7VL3QRMqUEDPpA/QFV08DDn3khQVcRtW2EFpnWI672SGV+4Bwj9LzYT9liYIhaTpowwu1Ba1ofThg9PdJeTo5lUo+y4zgks4KMRz9kMWU4JKBFlY7aX6RvVs628/W0qK5RN6eMq2XpOgjqqlrddNtGVla4ReF5G0LmrZkvnTGU+G0F8w8q01tLfalrLDlmUZ2kVo2VIV6qPEOCvnOPJ42Agc+FIyTM745ECFjsiK8waSz2smHDL4fFG0iJqMzKavu0MIvLQuBcXGh1+M30dwU3RPeEPkyCrJoex6S6Rm6nT7FmjSCRSJX0uV8VgXxzt3IEOgc+tqyBHrmAcLttYEsBPEbaiFWdO7JXIkNtbLsb26G9n0GHLzsLi8eMkZ4KbRim5+TJ73zE1z2Icxe7KpSN/wAsezytNYKBYno4FN/LpjwvamMbNBXSPp+/TsldTRu6Y/GbiJrJEzzkQYR2vQ1hnw5hfCdyfas="
+        distributions: "sdist bdist_wheel"
