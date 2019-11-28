@@ -54,7 +54,7 @@ class EngineWriter(Engine):
                 socket_path
             ),
             0,
-            video_size[3],
+            video_size[2],
             video_size[:2],
         )
 
