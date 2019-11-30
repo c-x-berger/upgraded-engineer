@@ -26,17 +26,22 @@ class Engine:
         :param engine_exec: Absolute path to the compiled potential-engine binary. 
         :param video_size: Tuple of video dimensions (width, height, framerate)
         """
-        launchline = "{exec_} -w {w} -h {h} -f {f} -d {sock} --shared_memory".format(
+        self.launchline = "{exec_} -w {w} -h {h} -f {f} -d {sock} --port {p} --shared_memory".format(
             exec_=engine_exec,
             w=video_size[0],
             h=video_size[1],
             f=video_size[2],
             sock=socket_path,
         )
-        self.process = subprocess.Popen(shlex.split(launchline))
+        self.process = None
+        # self.process = subprocess.Popen(shlex.split(launchline))
+
+    def start(self):
+        self.process = subprocess.Popen(shlex.split(self.launchline))
 
     def stop(self):
-        self.process.terminate()
+        if self.process is not None:
+            self.process.terminate()
 
 
 class EngineWriter(Engine):
@@ -61,6 +66,7 @@ class EngineWriter(Engine):
             video_size[2],
             video_size[:2],
         )
+        super().start()
 
     def write_frame(self, frame):
         """
