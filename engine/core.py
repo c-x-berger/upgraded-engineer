@@ -5,6 +5,7 @@ from typing import Tuple
 
 DEFAULT_SOCKET_PATH = "/tmp/engineering"
 DEFAULT_EXEC = "/usr/local/bin/potential-engine"
+DEFAULT_PORT = 1181
 DEFAULT_VIDEO_SIZE = (640, 480, 30)
 
 
@@ -17,6 +18,7 @@ class Engine:
         self,
         socket_path: str = DEFAULT_SOCKET_PATH,
         engine_exec: str = DEFAULT_EXEC,
+        port: int = DEFAULT_PORT,
         video_size: Tuple[int, int, int] = DEFAULT_VIDEO_SIZE,
     ):
         """
@@ -32,6 +34,7 @@ class Engine:
             h=video_size[1],
             f=video_size[2],
             sock=socket_path,
+            p=port,
         )
         self.process = None
         # self.process = subprocess.Popen(shlex.split(launchline))
@@ -53,9 +56,10 @@ class EngineWriter(Engine):
         self,
         socket_path: str = DEFAULT_SOCKET_PATH,
         engine_exec: str = DEFAULT_EXEC,
+        port: int = DEFAULT_PORT,
         video_size: Tuple[int, int, int] = DEFAULT_VIDEO_SIZE,
     ):
-        super().__init__(socket_path, engine_exec, video_size)
+        super().__init__(socket_path, engine_exec, port, video_size)
         # pipeline, (magic gst number), 0, framerate, video dimensions tuple
         self.writer = cv2.VideoWriter(
             "appsrc ! video/x-raw,format=BGR ! videoconvert ! video/x-raw,format=I420 ! shmsink socket-path = {}".format(
