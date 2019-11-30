@@ -37,7 +37,6 @@ class Engine:
             p=port,
         )
         self.process = None
-        # self.process = subprocess.Popen(shlex.split(launchline))
 
     def start(self):
         self.process = subprocess.Popen(shlex.split(self.launchline))
@@ -70,7 +69,6 @@ class EngineWriter(Engine):
             video_size[2],
             video_size[:2],
         )
-        super().start()
 
     def write_frame(self, frame):
         """
@@ -78,6 +76,8 @@ class EngineWriter(Engine):
 
         :param frame: Frame to write to shared memory.
         """
+        if self.process is None:
+            self.start()
         self.writer.write(frame)
 
     def stop(self):
