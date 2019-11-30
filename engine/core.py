@@ -48,11 +48,12 @@ class EngineWriter(Engine):
         video_size: Tuple[int, int, int] = DEFAULT_VIDEO_SIZE,
     ):
         super().__init__(socket_path, engine_exec, video_size)
-        # pipeline, 0 (magic gst number), framerate, video dimensions tuple
+        # pipeline, (magic gst number), 0, framerate, video dimensions tuple
         self.writer = cv2.VideoWriter(
             "appsrc ! videoconvert ! video/x-raw,format=I420 ! shmsink socket-path = {}".format(
                 socket_path
             ),
+            cv2.CAP_GSTREAMER,
             0,
             video_size[2],
             video_size[:2],
