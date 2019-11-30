@@ -62,8 +62,8 @@ class EngineWriter(Engine):
         super().__init__(socket_path, engine_exec, port, video_size)
         # pipeline, (magic gst number), 0, framerate, video dimensions tuple
         self.writer = cv2.VideoWriter(
-            "appsrc ! video/x-raw,format=BGR ! videoconvert ! video/x-raw,format=I420 ! shmsink socket-path = {}".format(
-                socket_path
+            "appsrc ! video/x-raw,width={w},height={h},framerate={f}/1! videoconvert ! video/x-raw,format=I420 ! shmsink socket-path = {socket}".format(
+                w=video_size[0], h=video_size[1], f=video_size[2], socket=socket_path
             ),
             cv2.CAP_GSTREAMER,
             0,
