@@ -35,6 +35,9 @@ class Engine:
         )
         self.process = subprocess.Popen(shlex.split(launchline))
 
+    def stop(self):
+        self.process.terminate()
+
 
 class EngineWriter(Engine):
     """
@@ -66,3 +69,7 @@ class EngineWriter(Engine):
         :param frame: Frame to write to shared memory.
         """
         self.writer.write(frame)
+
+    def stop(self):
+        super().stop()
+        self.writer.release()
