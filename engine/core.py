@@ -8,7 +8,7 @@ import cv2
 import gi
 
 gi.require_version("Gst", "1.0")
-from gi.repository import Gst  # isort:skip
+from gi.repository import GLib, Gst  # isort:skip
 
 DEFAULT_SOCKET_PATH = "/tmp/engineering"
 DEFAULT_EXEC = "/usr/local/bin/potential-engine"
@@ -33,14 +33,13 @@ class Engine:
         :param engine_exec: Absolute path to the compiled potential-engine binary. 
         :param video_size: Tuple of video dimensions (width, height, framerate)
         """
-        launchline = "{exec_} -w {w} -h {h} -f {f} -d {sock} --shared_memory".format(
+        launchline = "{exec_} -w {w} -h {h} -f {f} -d {sock} --input shmem".format(
             exec_=engine_exec,
             w=video_size[0],
             h=video_size[1],
             f=video_size[2],
             sock=socket_path,
         )
-        print(launchline)
         self.process = subprocess.Popen(shlex.split(launchline))
 
 
@@ -76,35 +75,42 @@ class EngineWriter(Engine):
 
 
 class GStreamerWriter:
-    def __init__(self, socket_path: str, repeat_frames: bool = False):
+    def __init__(
+        self, size: Tuple[int, int, int], socket_path: str, repeat_frames: bool = False,
+    ):
         self.thread = threading.Thread(target=self.__run_pipeline__)
         self.frame = None
         self.repeat_frames = repeat_frames
+        self.end = False
 
         Gst.init(None)
         self.pipeline = Gst.Pipeline.new(None)
+        self.loop = GLib.MainLoop()
 
-        caps = Gst.Caps.from_string(
-            f"video/x-raw,format=I420,height=240,width=320,framerate=30/1"
+        appsrc_caps = Gst.Caps.from_string(
+            f"video/x-raw,format=BGR,width={size[0]},height={size[1]},framerate={size[2]}/1"
         )
+        capsfilter_caps = Gst.Caps.from_string("video/x-raw,format=I420")
         self.appsrc = Gst.ElementFactory.make("appsrc")
-        videoconvert = Gst.ElementFactory.make("videoconvert")
-        shmsink = Gst.ElementFactory.make("shmsink")
+        self.videoconvert = Gst.ElementFactory.make("videoconvert")
+        self.capsfilter = Gst.ElementFactory.make("capsfilter")
+        self.shmsink = Gst.ElementFactory.make("shmsink")
 
         self.appsrc.connect("need-data", self.__need_data__)
-        self.appsrc.set_property("caps", caps)
+        self.appsrc.set_property("caps", appsrc_caps)
         self.appsrc.set_property("is-live", True)
-        shmsink.set_property("socket-path", socket_path)
-        shmsink.set_property("sync", False)
-        shmsink.set_property("wait-for-connection", False)
-        shmsink.set_property("processing-deadline", 100)
+        self.capsfilter.set_property("caps", capsfilter_caps)
+        self.shmsink.set_property("socket-path", socket_path)
+        self.shmsink.set_property("wait-for-connection", False)
 
         self.pipeline.add(self.appsrc)
-        self.pipeline.add(videoconvert)
-        self.pipeline.add(shmsink)
+        self.pipeline.add(self.videoconvert)
+        self.pipeline.add(self.capsfilter)
+        self.pipeline.add(self.shmsink)
 
-        self.appsrc.link(videoconvert)
-        videoconvert.link(shmsink)
+        self.appsrc.link(self.videoconvert)
+        self.videoconvert.link(self.capsfilter)
+        self.capsfilter.link(self.shmsink)
 
     def write(self, frame):
         self.frame = frame
@@ -115,20 +121,24 @@ class GStreamerWriter:
     def __need_data__(self, bus, msg):
         try:
             while self.frame is None:
+                if self.end:
+                    return
                 time.sleep(0.001)
 
-            data = cv2.cvtColor(self.frame, cv2.COLOR_BGR2YUV_I420).tostring()
-            buf = Gst.Buffer.new_wrapped(data)
+            buf = Gst.Buffer.new_wrapped(self.frame.tostring())
             self.appsrc.emit("push-buffer", buf)
+
+            if not self.repeat_frames:
+                self.frame = None
+
         except StopIteration:
             self.appsrc.emit("end-of-stream")
 
     def __run_pipeline__(self):
         self.pipeline.set_state(Gst.State.PLAYING)
         bus = self.pipeline.get_bus()
-        bus.timed_pop_filtered(
-            Gst.CLOCK_TIME_NONE, Gst.MessageType.ERROR | Gst.MessageType.EOS
-        )
+        self.loop.run()
+        self.end = True
         self.pipeline.set_state(Gst.State.NULL)
 
 
@@ -140,7 +150,7 @@ class GStreamerEngineWriter(Engine):
         video_size: Tuple[int, int, int] = DEFAULT_VIDEO_SIZE,
         repeat_frames: bool = False,
     ):
-        self.writer = GStreamerWriter(socket_path, repeat_frames)
+        self.writer = GStreamerWriter(video_size, socket_path, repeat_frames)
         super().__init__(socket_path, engine_exec, video_size)
         self.writer.start()
 
@@ -151,3 +161,7 @@ class GStreamerEngineWriter(Engine):
         :param frame: Frame to write to shared memory.
         """
         self.writer.write(frame)
+
+    def end(self):
+        self.process.terminate()
+        self.writer.loop.quit()
