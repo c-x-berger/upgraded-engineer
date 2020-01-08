@@ -11,13 +11,13 @@ gi.require_version("Gst", "1.0")
 from gi.repository import GLib, Gst  # isort:skip
 
 DEFAULT_SOCKET_PATH = "/tmp/engineering"
-DEFAULT_EXEC = "/usr/local/bin/potential-engine"
+DEFAULT_EXEC = "/usr/bin/rusty-engine"
 DEFAULT_VIDEO_SIZE = (640, 480, 30)
 
 
 class Engine:
     """
-    Class which starts and manages a potential-engine process.
+    Class which starts and manages a rusty-engine process.
     """
 
     def __init__(
@@ -27,10 +27,10 @@ class Engine:
         video_size: Tuple[int, int, int] = DEFAULT_VIDEO_SIZE,
     ):
         """
-        Constructor. Starts a new potential-engine process.
+        Constructor. Starts a new rusty-engine process.
         
         :param socket_path: Location to create the shared memory socket at.
-        :param engine_exec: Absolute path to the compiled potential-engine binary. 
+        :param engine_exec: Absolute path to the compiled rusty-engine binary. 
         :param video_size: Tuple of video dimensions (width, height, framerate)
         """
         launchline = "{exec_} -w {w} -h {h} -f {f} -d {sock} --input shmem".format(
@@ -75,8 +75,19 @@ class EngineWriter(Engine):
 
 
 class GStreamerWriter:
+    """
+    Constructor. Starts a GStreamer pipeline.
+    
+    :param socket_path: Location to create the shared memory socket at.
+    :param video_size: Tuple of video dimensions (width, height, framerate)
+    :param repeat_frames: False if a new frame must be acquired before streaming continues.
+    """
+
     def __init__(
-        self, size: Tuple[int, int, int], socket_path: str, repeat_frames: bool = False,
+        self,
+        socket_path: str,
+        video_size: Tuple[int, int, int],
+        repeat_frames: bool = False,
     ):
         self.thread = threading.Thread(target=self.__run_pipeline__)
         self.frame = None
@@ -88,7 +99,9 @@ class GStreamerWriter:
         self.loop = GLib.MainLoop()
 
         appsrc_caps = Gst.Caps.from_string(
-            f"video/x-raw,format=BGR,width={size[0]},height={size[1]},framerate={size[2]}/1"
+            "video/x-raw,format=BGR,width={w},height={h},framerate={f}/1".format(
+                w=video_size[0], h=video_size[1], f=video_size[2]
+            )
         )
         capsfilter_caps = Gst.Caps.from_string("video/x-raw,format=I420")
         self.appsrc = Gst.ElementFactory.make("appsrc")
@@ -143,6 +156,15 @@ class GStreamerWriter:
 
 
 class GStreamerEngineWriter(Engine):
+    """
+    Constructor for pure-GStreamer implementation.
+    
+    :param socket_path: Location to create the shared memory socket at.
+    :param engine_exec: Absolute path to the compiled rusty-engine binary. 
+    :param video_size: Tuple of video dimensions (width, height, framerate)
+    :param repeat_frames: False if a new frame must be acquired before streaming continues.
+    """
+
     def __init__(
         self,
         socket_path: str = DEFAULT_SOCKET_PATH,
@@ -150,7 +172,7 @@ class GStreamerEngineWriter(Engine):
         video_size: Tuple[int, int, int] = DEFAULT_VIDEO_SIZE,
         repeat_frames: bool = False,
     ):
-        self.writer = GStreamerWriter(video_size, socket_path, repeat_frames)
+        self.writer = GStreamerWriter(socket_path, video_size, repeat_frames)
         super().__init__(socket_path, engine_exec, video_size)
         self.writer.start()
 
@@ -163,5 +185,8 @@ class GStreamerEngineWriter(Engine):
         self.writer.write(frame)
 
     def end(self):
+        """
+        Close the rusty-engine process and stop the GStreamer pipeline.
+        """
         self.process.terminate()
         self.writer.loop.quit()
