@@ -3,7 +3,7 @@ upgraded-engineer
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
 [![PyPI](https://img.shields.io/pypi/v/upgraded-engineer.svg)](https://pypi.org/project/upgraded-engineer/)
 
-`upgraded-engineer` is a Python library for interacting with FRC 3494's [`potential-engine`.](https://github.com/BHSSFRC/potential-engine)
+`upgraded-engineer` is a Python library for interacting with [`rusty-engine`.](https://github.com/opensight-cv/rusty-engine)
 
 ## Installation
 `pip install upgraded-engineer`
@@ -16,7 +16,7 @@ Importing is simple:
 ```python
 import engine
 ```
-To simply start a new `potential-engine` process, create an instance of the `engine.Engine` class. You will have to figure out how to write frames into the shared memory yourself. (Note that `potential-engine` is expecting I420 color, and cannot determine what is being written for itself.)
+To simply start a new `rusty-engine` process, create an instance of the `engine.Engine` class. You will have to figure out how to write frames into the shared memory yourself. (Note that `rusty-engine` is expecting I420 color, and cannot determine what is being written for itself.)
 
 Alternatively, using `engine.EngineWriter` provides the `write_frame` method to write "normal" Open CV BGR color frames into shared memory for streaming.
 ```python
