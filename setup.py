@@ -20,7 +20,7 @@ setuptools.setup(
     version=version,
     author="Caleb Xavier Berger",
     author_email="caleb.x.berger@gmail.com",
-    description='Python "API" for interacting with The Quadrangles FRC 3494\'s potential-engine',
+    description='Python "API" for interacting with rusty-engine',
     long_description=long_desc,
     long_description_content_type="text/markdown",
     url="https://github.com/opensight-cv/upgraded-engineer",
