@@ -23,7 +23,7 @@ setuptools.setup(
     description='Python "API" for interacting with The Quadrangles FRC 3494\'s potential-engine',
     long_description=long_desc,
     long_description_content_type="text/markdown",
-    url="https://github.com/homebrew-limelight/upgraded-engineer",
+    url="https://github.com/opensight-cv/upgraded-engineer",
     packages=["engine"],
     classifiers=[
         "License :: OSI Approved :: MIT License",
