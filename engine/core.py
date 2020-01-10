@@ -11,8 +11,15 @@ gi.require_version("Gst", "1.0")
 from gi.repository import GLib, Gst  # isort:skip
 
 DEFAULT_SOCKET_PATH = "/tmp/engineering"
-DEFAULT_EXEC = "/usr/bin/rusty-engine"
 DEFAULT_VIDEO_SIZE = (640, 480, 30)
+DEFAULT_EXEC = shlex.split(
+    "/usr/bin/rusty-engine -w {w} -h {h} -f {f} -d {sock} --input shmem".format(
+        w=DEFAULT_VIDEO_SIZE[0],
+        h=DEFAULT_VIDEO_SIZE[1],
+        f=DEFAULT_VIDEO_SIZE[2],
+        sock=DEFAULT_SOCKET_PATH,
+    )
+)
 
 
 class Engine:
@@ -21,29 +28,25 @@ class Engine:
     """
 
     def __init__(
-        self,
-        socket_path: str = DEFAULT_SOCKET_PATH,
-        engine_exec: str = DEFAULT_EXEC,
-        video_size: Tuple[int, int, int] = DEFAULT_VIDEO_SIZE,
+        self, launch: List[str] = DEFAULT_EXEC,
     ):
         """
         Constructor. Starts a new rusty-engine process.
         
-        :param socket_path: Location to create the shared memory socket at.
-        :param engine_exec: Absolute path to the compiled rusty-engine binary. 
-        :param video_size: Tuple of video dimensions (width, height, framerate)
+        :param launch: Absolute path to the compiled rusty-engine binary.
         """
-        launchline = "{exec_} -w {w} -h {h} -f {f} -d {sock} --input shmem".format(
-            exec_=engine_exec,
-            w=video_size[0],
-            h=video_size[1],
-            f=video_size[2],
-            sock=socket_path,
-        )
-        self.process = subprocess.Popen(shlex.split(launchline))
+        self.launch = launch
+        self.process: subprocess.Popen = None
+
+    def start(self):
+        self.process = subprocess.Popen(self.launch)
+
+    def stop(self):
+        if self.process is not None:
+            self.process.terminate()
 
 
-class EngineWriter(Engine):
+class EngineWriter(ABC):
     """
     Starts an engine and provides easy access to the shared memory socket.
     """
