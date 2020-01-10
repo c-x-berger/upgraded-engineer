@@ -8,7 +8,7 @@ upgraded-engineer
 ## Installation
 `pip install upgraded-engineer`
 ### Dependencies
-* GStreamer (base and bad plugins required for `upgraded-engineer`, more required by `potential-engine`)
+* GStreamer (base and bad plugins required for `upgraded-engineer`, more required by `rusty-engine`)
 * Open CV (known working with >= 4.0.0, must be compiled with GStreamer support)
 
 ## Usage
@@ -18,11 +18,13 @@ import engine
 ```
 To simply start a new `rusty-engine` process, create an instance of the `engine.Engine` class. You will have to figure out how to write frames into the shared memory yourself. (Note that `rusty-engine` is expecting I420 color, and cannot determine what is being written for itself.)
 
-Alternatively, using `engine.EngineWriter` provides the `write_frame` method to write "normal" Open CV BGR color frames into shared memory for streaming.
+Alternatively, using `engine.EngineWriter`s provide the `write_frame` method to write "normal" Open CV BGR color frames into shared memory for streaming.
 ```python
-ew = engine.EngineWriter()
+import engine
+# see also: engine.GStreamerEngineWriter for a GStreamer-only impl
+ew = engine.OpenCVEngineWriter()
 # alternately, if we wanted smaller video
-ew = engine.EngineWriter(video_size=(426, 240, 30)) # width, height, framerate
+ew = engine.OpenCVEngineWriter(video_size=(426, 240, 30)) # width, height, framerate
 ```
 Now, writing frames into shared memory is simple.
 ```python
