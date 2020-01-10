@@ -1,10 +1,11 @@
+import abc
 import shlex
 import subprocess
 import threading
 import time
-from typing import Tuple
+from abc import ABC
+from typing import Tuple, List
 
-import cv2
 import gi
 
 gi.require_version("Gst", "1.0")
@@ -20,6 +21,14 @@ DEFAULT_EXEC = shlex.split(
         sock=DEFAULT_SOCKET_PATH,
     )
 )
+
+
+def launchline(exec_: str, size: Tuple[int, int, int], socket: str):
+    return shlex.split(
+        "{exec_} -w {w} -h {h} -f {f} -d {sock} --input shmem".format(
+            exec_=exec_, w=size[0], h=size[1], f=size[2], sock=socket,
+        )
+    )
 
 
 class Engine:
@@ -54,27 +63,28 @@ class EngineWriter(ABC):
     def __init__(
         self,
         socket_path: str = DEFAULT_SOCKET_PATH,
-        engine_exec: str = DEFAULT_EXEC,
         video_size: Tuple[int, int, int] = DEFAULT_VIDEO_SIZE,
+        autostart: bool = True,
     ):
-        super().__init__(socket_path, engine_exec, video_size)
-        # pipeline, 0 (magic gst number), framerate, video dimensions tuple
-        self.writer = cv2.VideoWriter(
-            "appsrc ! videoconvert ! video/x-raw,format=I420 ! shmsink socket-path = {}".format(
-                socket_path
-            ),
-            0,
-            video_size[2],
-            video_size[:2],
-        )
+        self.socket, self.size, self.autostart = socket_path, video_size, autostart
+        self.process: Engine = Engine(launchline(DEFAULT_EXEC, self.size, self.socket))
+        if self.autostart:
+            self.start()
 
+    def start(self):
+        self.process.start()
+
+    @abc.abstractmethod
     def write_frame(self, frame):
         """
         Write a frame into the engine. Call in a tight loop, you need to hit your given framerate!
 
         :param frame: Frame to write to shared memory.
         """
-        self.writer.write(frame)
+        pass
+
+    def stop(self):
+        self.process.stop()
 
 
 class GStreamerWriter:
@@ -158,7 +168,7 @@ class GStreamerWriter:
         self.pipeline.set_state(Gst.State.NULL)
 
 
-class GStreamerEngineWriter(Engine):
+class GStreamerEngineWriter(EngineWriter):
     """
     Constructor for pure-GStreamer implementation.
     
@@ -171,12 +181,12 @@ class GStreamerEngineWriter(Engine):
     def __init__(
         self,
         socket_path: str = DEFAULT_SOCKET_PATH,
-        engine_exec: str = DEFAULT_EXEC,
         video_size: Tuple[int, int, int] = DEFAULT_VIDEO_SIZE,
         repeat_frames: bool = False,
+        autostart: bool = True,
     ):
+        super().__init__(socket_path, video_size, autostart)
         self.writer = GStreamerWriter(socket_path, video_size, repeat_frames)
-        super().__init__(socket_path, engine_exec, video_size)
         self.writer.start()
 
     def write_frame(self, frame):
@@ -187,9 +197,9 @@ class GStreamerEngineWriter(Engine):
         """
         self.writer.write(frame)
 
-    def end(self):
+    def stop(self):
         """
         Close the rusty-engine process and stop the GStreamer pipeline.
         """
-        self.process.terminate()
+        super().stop()
         self.writer.loop.quit()
