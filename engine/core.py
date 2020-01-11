@@ -11,10 +11,12 @@ import gi
 gi.require_version("Gst", "1.0")
 from gi.repository import GLib, Gst  # isort:skip
 
+DEFAULT_EXEC_PATH = "/usr/bin/rusty-engine"
 DEFAULT_SOCKET_PATH = "/tmp/engineering"
-DEFAULT_VIDEO_SIZE = (640, 480, 30)
+DEFAULT_VIDEO_SIZE = (320, 240, 30)
 DEFAULT_EXEC = shlex.split(
-    "/usr/bin/rusty-engine -w {w} -h {h} -f {f} -d {sock} --input shmem".format(
+    "{e} -w {w} -h {h} -f {f} -d {sock} --input shmem".format(
+        e=DEFAULT_EXEC_PATH,
         w=DEFAULT_VIDEO_SIZE[0],
         h=DEFAULT_VIDEO_SIZE[1],
         f=DEFAULT_VIDEO_SIZE[2],
@@ -67,7 +69,7 @@ class EngineWriter(ABC):
         autostart: bool = True,
     ):
         self.socket, self.size, self.autostart = socket_path, video_size, autostart
-        self.process: Engine = Engine(launchline(DEFAULT_EXEC, self.size, self.socket))
+        self.process: Engine = Engine(launchline(DEFAULT_EXEC_PATH, self.size, self.socket))
         if self.autostart:
             self.start()
 
