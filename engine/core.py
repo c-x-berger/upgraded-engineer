@@ -3,7 +3,6 @@ import shlex
 import subprocess
 import threading
 import time
-from abc import ABC
 from typing import Tuple, List
 
 import gi
@@ -42,7 +41,7 @@ class Engine:
         self, launch: List[str] = DEFAULT_EXEC,
     ):
         """
-        Constructor. Starts a new rusty-engine process.
+        Constructor.
         
         :param launch: Absolute path to the compiled rusty-engine binary.
         """
@@ -50,16 +49,22 @@ class Engine:
         self.process: subprocess.Popen = None
 
     def start(self):
+        """
+        Start the rusty-engine process.
+        """
         self.process = subprocess.Popen(self.launch)
 
     def stop(self):
+        """
+        Stop the rusty-engine process, potentially destroying the socket.
+        """
         if self.process is not None:
             self.process.terminate()
 
 
-class EngineWriter(ABC):
+class EngineWriter(Engine, metaclass=abc.ABCMeta):
     """
-    Starts an engine and provides easy access to the shared memory socket.
+    Provides easy access to a shared memory socket and starts an Engine.
     """
 
     def __init__(
@@ -68,13 +73,17 @@ class EngineWriter(ABC):
         video_size: Tuple[int, int, int] = DEFAULT_VIDEO_SIZE,
         autostart: bool = True,
     ):
+        """
+        Constructor.
+
+        :param socket_path: The filesystem path to the shared memory socket.
+        :param video_size: Tuple of video dimensions.
+        :param autostart: If True, the start method will be immediately called.
+        """
+        super().__init__(launchline(DEFAULT_EXEC_PATH, video_size, socket_path))
         self.socket, self.size, self.autostart = socket_path, video_size, autostart
-        self.process: Engine = Engine(launchline(DEFAULT_EXEC_PATH, self.size, self.socket))
         if self.autostart:
             self.start()
-
-    def start(self):
-        self.process.start()
 
     @abc.abstractmethod
     def write_frame(self, frame):
@@ -84,9 +93,6 @@ class EngineWriter(ABC):
         :param frame: Frame to write to shared memory.
         """
         pass
-
-    def stop(self):
-        self.process.stop()
 
 
 class GStreamerWriter:
